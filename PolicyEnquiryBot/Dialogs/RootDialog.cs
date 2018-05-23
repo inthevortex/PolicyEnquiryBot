@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using static PolicyEnquiryBot.Helper.Helper;
 
-namespace PolicyEnquiryBot.Dialog
+namespace PolicyEnquiryBot.Dialogs
 {
     [Serializable]
     internal class RootDialog : IDialog<object>

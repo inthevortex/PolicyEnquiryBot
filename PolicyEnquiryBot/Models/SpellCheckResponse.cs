@@ -18,6 +18,7 @@ namespace PolicyEnquiryBot.Models
 
     public class SpellCheckResponse
     {
+        // ReSharper disable once InconsistentNaming
         public string _type { get; set; }
         public List<FlaggedToken> FlaggedTokens { get; set; }
         public string CorrectionType { get; set; }

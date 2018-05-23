@@ -1,61 +1,56 @@
-﻿using Microsoft.Identity.Client;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Microsoft.Identity.Client;
 
 namespace BotAuth
 {
+    // ReSharper disable once InconsistentNaming
     public class InMemoryTokenCacheMSAL
     {
-        string CacheId = string.Empty;
-        private Dictionary<string, object> cacheData = new Dictionary<string, object>();
-        TokenCache cache = new TokenCache();
+        private readonly string _cacheId;
+        private readonly Dictionary<string, object> _cacheData = new Dictionary<string, object>();
+        private readonly TokenCache _cache = new TokenCache();
 
         public InMemoryTokenCacheMSAL()
         {
-            CacheId = "MSAL_TokenCache";
-            cache.SetBeforeAccess(BeforeAccessNotification);
-            cache.SetAfterAccess(AfterAccessNotification);
+            _cacheId = "MSAL_TokenCache";
+            _cache.SetBeforeAccess(BeforeAccessNotification);
+            _cache.SetAfterAccess(AfterAccessNotification);
             Load();
         }
 
         public InMemoryTokenCacheMSAL(byte[] tokenCache)
         {
-            CacheId = "MSAL_TokenCache";
-            cache.SetBeforeAccess(BeforeAccessNotification);
-            cache.SetAfterAccess(AfterAccessNotification);
-            cache.Deserialize(tokenCache);
+            _cacheId = "MSAL_TokenCache";
+            _cache.SetBeforeAccess(BeforeAccessNotification);
+            _cache.SetAfterAccess(AfterAccessNotification);
+            _cache.Deserialize(tokenCache);
         }
 
         public TokenCache GetMsalCacheInstance()
         {
-            cache.SetBeforeAccess(BeforeAccessNotification);
-            cache.SetAfterAccess(AfterAccessNotification);
+            _cache.SetBeforeAccess(BeforeAccessNotification);
+            _cache.SetAfterAccess(AfterAccessNotification);
             Load();
-            return cache;
+            return _cache;
         }
 
-        public void SaveUserStateValue(string state)
+        public void SaveUserStateValue(string state) => _cacheData[_cacheId + "_state"] = state;
+
+        public string ReadUserStateValue() => (string)_cacheData[_cacheId + "_state"];
+
+        private void Load()
         {
-            cacheData[CacheId + "_state"] = state;
-        }
-        public string ReadUserStateValue()
-        {
-            string state = string.Empty;
-            state = (string)cacheData[CacheId + "_state"];
-            return state;
-        }
-        public void Load()
-        {
-            if (cacheData.ContainsKey(CacheId))
-                cache.Deserialize((byte[])cacheData[CacheId]);
+            if (_cacheData.ContainsKey(_cacheId))
+                _cache.Deserialize((byte[])_cacheData[_cacheId]);
         }
 
-        public void Persist()
+        private void Persist()
         {
             // Optimistically set HasStateChanged to false. We need to do it early to avoid losing changes made by a concurrent thread.
-            cache.HasStateChanged = false;
+            _cache.HasStateChanged = false;
 
             // Reflect changes in the persistent store
-            cacheData[CacheId] = cache.Serialize();
+            _cacheData[_cacheId] = _cache.Serialize();
         }
 
         /*
@@ -75,7 +70,7 @@ namespace BotAuth
         private void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
             // if the access operation resulted in a cache update
-            if (cache.HasStateChanged)
+            if (_cache.HasStateChanged)
             {
                 Persist();
             }

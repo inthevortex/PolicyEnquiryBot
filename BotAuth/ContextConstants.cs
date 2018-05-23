@@ -1,6 +1,6 @@
 ﻿namespace BotAuth
 {
-    public class ContextConstants
+    public static class ContextConstants
     {
         public const string PersistedCookieKey = "_persistedCookie";
         public const string AuthResultKey = "_authResult";

@@ -1,29 +1,29 @@
-﻿using Newtonsoft.Json;
-using PolicyEnquiryBot.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using PolicyEnquiryBot.Models;
 
 namespace PolicyEnquiryBot.Helper
 {
     public static class Helper
     {
-        private static RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider();
+        private static readonly RNGCryptoServiceProvider RngCsp = new RNGCryptoServiceProvider();
 
         public static string GetSetting(string name) => ConfigurationManager.AppSettings[name];
 
         public static int GenerateRandomNumber()
         {
-            int number = 0;
-            byte[] randomNumber = new byte[1];
+            var number = 0;
+            var randomNumber = new byte[1];
 
             do
             {
-                rngCsp.GetBytes(randomNumber);
+                RngCsp.GetBytes(randomNumber);
                 var digit = randomNumber[0] % 10;
                 number = number * 10 + digit;
             } while (number.ToString().Length < 6);
@@ -49,18 +49,18 @@ namespace PolicyEnquiryBot.Helper
 
         public static async Task<string> CallBingSpellCheckAsync(string query)
         {
-            HttpClient client = new HttpClient();
-            HttpResponseMessage response = new HttpResponseMessage();
+            var client = new HttpClient();
+            HttpResponseMessage response;
             var uri = GetSetting("BingSpellCheckUrl") + GetSetting("BingSpellCheckParams");
 
             client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", GetSetting("BingSpellCheckAPIKey"));
 
-            List<KeyValuePair<string, string>> values = new List<KeyValuePair<string, string>>
+            var values = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("text", query)
             };
 
-            using (FormUrlEncodedContent content = new FormUrlEncodedContent(values))
+            using (var content = new FormUrlEncodedContent(values))
             {
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
                 response = await client.PostAsync(uri, content);

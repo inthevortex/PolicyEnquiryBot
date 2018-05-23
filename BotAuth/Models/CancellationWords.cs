@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace BotAuth.Models
 {
-    public class CancellationWords
+    public static class CancellationWords
     {
         public static List<string> GetCancellationWords() =>
             AuthText.CancellationWords.Split(',').ToList();

@@ -1,6 +1,6 @@
-﻿using MongoDB.Driver;
-using System;
+﻿using System;
 using System.Security.Authentication;
+using MongoDB.Driver;
 using static PolicyEnquiryBot.Helper.Helper;
 
 namespace PolicyEnquiryBot.Helper
@@ -11,7 +11,7 @@ namespace PolicyEnquiryBot.Helper
         {
             Server = new MongoServerAddress(GetSetting("host"), Convert.ToInt32(GetSetting("port"))),
             UseSsl = true,
-            SslSettings = new SslSettings()
+            SslSettings = new SslSettings
             {
                 EnabledSslProtocols = SslProtocols.Tls12
             },

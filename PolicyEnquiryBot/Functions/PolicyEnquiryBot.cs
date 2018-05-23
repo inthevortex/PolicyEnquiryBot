@@ -11,7 +11,7 @@ using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
-using PolicyEnquiryBot.Dialog;
+using PolicyEnquiryBot.Dialogs;
 using static PolicyEnquiryBot.Helper.MongoDbClient;
 using static PolicyEnquiryBot.Helper.Helper;
 
@@ -43,7 +43,7 @@ namespace PolicyEnquiryBot
                     switch (activity.GetActivityType())
                     {
                         case ActivityTypes.Message:
-                            await Conversation.SendAsync(activity, () => new AuthenticationDialog());
+                            await Conversation.SendAsync(activity, () => new RootDialog());
                             break;
 
                         case ActivityTypes.ConversationUpdate:

@@ -2,6 +2,7 @@
 
 namespace PolicyEnquiryBot.Helper
 {
+    // ReSharper disable once InconsistentNaming
     public static class SSMLHelper
     {
         public static string Speak(string text)

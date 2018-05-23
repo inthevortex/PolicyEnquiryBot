@@ -1,49 +1,51 @@
-﻿using BotAuth.Models;
-using BotAuth.Providers;
-using Microsoft.Bot.Builder.ConnectorEx;
-using Microsoft.Bot.Builder.Dialogs;
-using Microsoft.Bot.Connector;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using BotAuth.Models;
+using BotAuth.Providers;
+using Microsoft.Bot.Builder.ConnectorEx;
+using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Connector;
+using static BotAuth.ContextConstants;
 
 namespace BotAuth.Dialogs
 {
     [Serializable]
     public class AuthDialog : IDialog<AuthResult>
     {
-        protected IAuthProvider _authProvider;
-        protected AuthenticationOptions _authOptions;
-        protected string _prompt { get; }
+        private readonly IAuthProvider _authProvider;
+        private readonly AuthenticationOptions _authOptions;
+        private string Prompt { get; }
 
-        public AuthDialog(IAuthProvider AuthProvider, AuthenticationOptions AuthOptions, string Prompt = "Please click to sign in: ")
+        public AuthDialog(IAuthProvider authProvider, AuthenticationOptions authOptions, string prompt = "Please click to sign in: ")
         {
-            _prompt = Prompt;
-            _authProvider = AuthProvider;
-            _authOptions = AuthOptions;
+            Prompt = prompt;
+            _authProvider = authProvider;
+            _authOptions = authOptions;
         }
 
-        public async Task StartAsync(IDialogContext context)
+        public Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
+
+            return Task.CompletedTask;
         }
 
-        public async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> argument)
+        private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> argument)
         {
             var msg = await argument;
 
-            string validated = "";
-            int magicNumber = 0;
-            if (context.UserData.TryGetValue($"{_authProvider.Name}{ContextConstants.AuthResultKey}", out AuthResult authResult))
+            if (context.UserData.TryGetValue($"{_authProvider.Name}{AuthResultKey}", out AuthResult authResult))
             {
                 try
                 {
                     //IMPORTANT: DO NOT REMOVE THE MAGIC NUMBER CHECK THAT WE DO HERE. THIS IS AN ABSOLUTE SECURITY REQUIREMENT
                     //REMOVING THIS WILL REMOVE YOUR BOT AND YOUR USERS TO SECURITY VULNERABILITIES. 
                     //MAKE SURE YOU UNDERSTAND THE ATTACK VECTORS AND WHY THIS IS IN PLACE.
-                    context.UserData.TryGetValue($"{_authProvider.Name}{ContextConstants.MagicNumberValidated}", out validated);
+                    context.UserData.TryGetValue($"{_authProvider.Name}{MagicNumberValidated}", out string validated);
+
                     if (validated == "true" || !_authOptions.UseMagicNumber)
                     {
                         // Try to get token to ensure it is still good
@@ -53,17 +55,18 @@ namespace BotAuth.Dialogs
                         else
                         {
                             // Save authenticationOptions in UserData
-                            context.UserData.SetValue($"{_authProvider.Name}{ContextConstants.AuthOptions}", _authOptions);
+                            context.UserData.SetValue($"{_authProvider.Name}{AuthOptions}", _authOptions);
 
                             // Get ConversationReference and combine with AuthProvider type for the callback
                             var conversationRef = context.Activity.ToConversationReference();
                             var state = GetStateParam(conversationRef);
-                            string authenticationUrl = await _authProvider.GetAuthUrlAsync(_authOptions, state);
+                            var authenticationUrl = await _authProvider.GetAuthUrlAsync(_authOptions, state);
                             await PromptToLogin(context, msg, authenticationUrl);
                             context.Wait(MessageReceivedAsync);
                         }
                     }
-                    else if (context.UserData.TryGetValue($"{_authProvider.Name}{ContextConstants.MagicNumberKey}", out magicNumber))
+
+                    else if (context.UserData.TryGetValue($"{_authProvider.Name}{MagicNumberKey}", out int magicNumber))
                     {
                         if (msg.Text == null)
                         {
@@ -76,19 +79,19 @@ namespace BotAuth.Dialogs
                             // handle at mentions in Teams
                             var text = msg.Text;
                             if (text.Contains("</at>"))
-                                text = text.Substring(text.IndexOf("</at>") + 5).Trim();
+                                text = text.Substring(text.IndexOf("</at>", StringComparison.Ordinal) + 5).Trim();
 
                             if (text.Length >= 6 && magicNumber.ToString() == text.Substring(0, 6))
                             {
-                                context.UserData.SetValue<string>($"{_authProvider.Name}{ContextConstants.MagicNumberValidated}", "true");
+                                context.UserData.SetValue($"{_authProvider.Name}{MagicNumberValidated}", "true");
                                 await context.PostAsync($"Thanks {authResult.UserName}. You are now logged in. ");
                                 context.Done(authResult);
                             }
                             else
                             {
-                                context.UserData.RemoveValue($"{_authProvider.Name}{ContextConstants.AuthResultKey}");
-                                context.UserData.SetValue<string>($"{_authProvider.Name}{ContextConstants.MagicNumberValidated}", "false");
-                                context.UserData.RemoveValue($"{_authProvider.Name}{ContextConstants.MagicNumberKey}");
+                                context.UserData.RemoveValue($"{_authProvider.Name}{AuthResultKey}");
+                                context.UserData.SetValue($"{_authProvider.Name}{MagicNumberValidated}", "false");
+                                context.UserData.RemoveValue($"{_authProvider.Name}{MagicNumberKey}");
                                 await context.PostAsync($"I'm sorry but I couldn't validate your number. Please try authenticating once again. ");
                                 context.Wait(MessageReceivedAsync);
                             }
@@ -97,35 +100,36 @@ namespace BotAuth.Dialogs
                 }
                 catch
                 {
-                    context.UserData.RemoveValue($"{_authProvider.Name}{ContextConstants.AuthResultKey}");
-                    context.UserData.SetValue($"{_authProvider.Name}{ContextConstants.MagicNumberValidated}", "false");
-                    context.UserData.RemoveValue($"{_authProvider.Name}{ContextConstants.MagicNumberKey}");
+                    context.UserData.RemoveValue($"{_authProvider.Name}{AuthResultKey}");
+                    context.UserData.SetValue($"{_authProvider.Name}{MagicNumberValidated}", "false");
+                    context.UserData.RemoveValue($"{_authProvider.Name}{MagicNumberKey}");
                     await context.PostAsync($"I'm sorry but something went wrong while authenticating.");
                     context.Done<AuthResult>(null);
                 }
             }
+
             else
             {
                 // Try to get token
                 var token = await _authProvider.GetAccessToken(_authOptions, context);
+
                 if (token != null)
                     context.Done(token);
+
                 else
                 {
-                    if (msg.Text != null &&
-                        CancellationWords.GetCancellationWords().Contains(msg.Text.ToUpper()))
-                    {
+                    if (msg.Text != null && CancellationWords.GetCancellationWords().Contains(msg.Text.ToUpper()))
                         context.Done<AuthResult>(null);
-                    }
+
                     else
                     {
                         // Save authenticationOptions in UserData
-                        context.UserData.SetValue($"{_authProvider.Name}{ContextConstants.AuthOptions}", _authOptions);
+                        context.UserData.SetValue($"{_authProvider.Name}{AuthOptions}", _authOptions);
 
                         // Get ConversationReference and combine with AuthProvider type for the callback
                         var conversationRef = context.Activity.ToConversationReference();
                         var state = GetStateParam(conversationRef);
-                        string authenticationUrl = await _authProvider.GetAuthUrlAsync(_authOptions, state);
+                        var authenticationUrl = await _authProvider.GetAuthUrlAsync(_authOptions, state);
                         await PromptToLogin(context, msg, authenticationUrl);
                         context.Wait(MessageReceivedAsync);
                     }
@@ -152,30 +156,21 @@ namespace BotAuth.Dialogs
         /// <returns>Task from Posting or prompt to the context.</returns>
         protected virtual Task PromptToLogin(IDialogContext context, IMessageActivity msg, string authenticationUrl)
         {
-            Attachment plAttachment = null;
-            SigninCard plCard;
-            if (msg.ChannelId == "msteams")
-                plCard = new SigninCard(_prompt, GetCardActions(authenticationUrl, "openUrl"));
-            else
-                plCard = new SigninCard(_prompt, GetCardActions(authenticationUrl, "signin"));
-            plAttachment = plCard.ToAttachment();
-
-            IMessageActivity response = context.MakeMessage();
+            var response = context.MakeMessage();
             response.Recipient = msg.From;
             response.Type = "message";
-
             response.Attachments = new List<Attachment>
             {
-                plAttachment
+                new SigninCard(Prompt, GetCardActions(authenticationUrl, "signin")).ToAttachment()
             };
 
             return context.PostAsync(response);
         }
 
-        private List<CardAction> GetCardActions(string authenticationUrl, string actionType)
+        private static List<CardAction> GetCardActions(string authenticationUrl, string actionType)
         {
-            List<CardAction> cardButtons = new List<CardAction>();
-            CardAction plButton = new CardAction()
+            var cardButtons = new List<CardAction>();
+            var plButton = new CardAction
             {
                 Value = authenticationUrl,
                 Type = actionType,
