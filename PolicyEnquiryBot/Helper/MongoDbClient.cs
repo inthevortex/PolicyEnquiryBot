@@ -9,7 +9,7 @@ namespace PolicyEnquiryBot.Helper
     {
         public static MongoClient GetMongoClient(string dbname) => new MongoClient(new MongoClientSettings
         {
-            Server = new MongoServerAddress(GetSetting("host"), Convert.ToInt32(GetSetting("port"))),
+            Server = new MongoServerAddress(GetSetting("cosmosdb:host"), Convert.ToInt32(GetSetting("cosmosdb:port"))),
             UseSsl = true,
             SslSettings = new SslSettings
             {
@@ -17,8 +17,8 @@ namespace PolicyEnquiryBot.Helper
             },
             Credential = new MongoCredential(
                 "SCRAM-SHA-1",
-                new MongoInternalIdentity(dbname, GetSetting("uname")),
-                new PasswordEvidence(GetSetting("password")))
+                new MongoInternalIdentity(dbname, GetSetting("cosmosdb:username")),
+                new PasswordEvidence(GetSetting("cosmosdb:password")))
         });
     }
 }

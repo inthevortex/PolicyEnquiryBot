@@ -5,6 +5,13 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Autofac;
+using Microsoft.Bot.Builder.Azure;
+using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Dialogs.Internals;
+using Microsoft.Bot.Connector;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Auth;
 using Newtonsoft.Json;
 using PolicyEnquiryBot.Models;
 
@@ -13,6 +20,25 @@ namespace PolicyEnquiryBot.Helper
     public static class Helper
     {
         private static readonly RNGCryptoServiceProvider RngCsp = new RNGCryptoServiceProvider();
+
+        public static void ConfigureStateStore()
+        {
+            // Configure bot state store to cosmosdb table storage
+            var store = new TableBotDataStore(new CloudStorageAccount(new StorageCredentials(GetSetting("table:name"), GetSetting("table:key")), true));
+            Conversation.UpdateContainer(
+                builder =>
+                {
+                    builder.Register(c => store)
+                        .Keyed<IBotDataStore<BotData>>(AzureModule.Key_DataStore)
+                        .AsSelf()
+                        .SingleInstance();
+
+                    builder.Register(c => new CachingBotDataStore(store, CachingBotDataStoreConsistencyPolicy.ETagBasedConsistency))
+                        .As<IBotDataStore<BotData>>()
+                        .AsSelf()
+                        .InstancePerLifetimeScope();
+                });
+        }
 
         public static string GetSetting(string name) => ConfigurationManager.AppSettings[name];
 

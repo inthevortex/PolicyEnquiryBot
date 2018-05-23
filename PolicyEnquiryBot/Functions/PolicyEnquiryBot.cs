@@ -12,7 +12,6 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
 using PolicyEnquiryBot.Dialogs;
-using static PolicyEnquiryBot.Helper.MongoDbClient;
 using static PolicyEnquiryBot.Helper.Helper;
 
 namespace PolicyEnquiryBot
@@ -24,11 +23,11 @@ namespace PolicyEnquiryBot
         {
             log.Info("PolicyEnquiry was triggered!");
 
-            var mongoClient = GetMongoClient(GetSetting("dbname"));
-
             // Initialize the azure bot
             using (BotService.Initialize())
             {
+                ConfigureStateStore();
+
                 // Deserialize the incoming activity
                 var activity = JsonConvert.DeserializeObject<Activity>(await req.Content.ReadAsStringAsync());
 

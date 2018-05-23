@@ -32,6 +32,7 @@ namespace PolicyEnquiryBot
 
             using (BotService.Initialize())
             {
+                ConfigureStateStore();
                 GetQueryParams(req, out var code, out var state);
 
                 try
@@ -57,6 +58,7 @@ namespace PolicyEnquiryBot
                     var magicNumber = GenerateRandomNumber();
                     var writeSuccessful = false;
                     uint writeAttempts = 0;
+
                     using (var scope = DialogModule.BeginLifetimeScope(Conversation.Container, message))
                     {
                         // Get the UserData from the original conversation
@@ -97,7 +99,7 @@ namespace PolicyEnquiryBot
 
                         if (!writeSuccessful)
                         {
-                            message.Text = String.Empty; // fail the login process if we can't write UserData
+                            message.Text = string.Empty; // fail the login process if we can't write UserData
                             await Conversation.ResumeAsync(conversationRef, message);
                             resp.Content = new StringContent("<html><body>Could not log you in at this time, please try again later</body></html>", Encoding.UTF8, @"text/html");
 

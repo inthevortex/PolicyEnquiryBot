@@ -61,7 +61,7 @@ namespace BotAuth {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to QUIT,CANCEL,STOP,GO BACK,RESET,HELP.
+        ///   Looks up a localized string similar to QUIT,CANCEL,STOP,GO BACK,RESET,HELP,BYE.
         /// </summary>
         internal static string CancellationWords {
             get {

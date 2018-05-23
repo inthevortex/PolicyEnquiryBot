@@ -5,14 +5,19 @@ namespace BotAuth.Models
     [Serializable]
     public class AuthenticationOptions
     {
-        public AuthenticationOptions()
+        public AuthenticationOptions() { }
+        
+
+        public AuthenticationOptions(string authority, string clientId, string clientSecret, string[] scopes, string redirectUrl)
         {
-            // Default magic number to yes as disabling is a significant security vulnerability
-            UseMagicNumber = true;
+            Authority = authority;
+            ClientId = clientId;
+            ClientSecret = clientSecret;
+            Scopes = scopes;
+            RedirectUrl = redirectUrl;
         }
 
-        //[System.Obsolete("UseMagicNumber is deprecated and is a significant security vulnerability to disable.", false)]
-        public bool UseMagicNumber { get; set; }
+        public bool UseMagicNumber { get; } = true;
         public string ClientType { get; set; }
         public string Authority { get; set; }
         public string ResourceId { get; set; }
@@ -21,6 +26,6 @@ namespace BotAuth.Models
         public string[] Scopes { get; set; }
         public string RedirectUrl { get; set; }
         public string Policy { get; set; }
-        public string MagicNumberView { get; set; }
+        public string MagicNumberView { get; set; } = string.Empty;
     }
 }
