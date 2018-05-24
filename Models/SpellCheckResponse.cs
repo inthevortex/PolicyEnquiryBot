@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace PolicyEnquiryBot.Models
+namespace Models
 {
     public class Suggestions
     {

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Web;
 using Autofac;
 using BotAuth;
-using BotAuth.Models;
 using BotAuth.Providers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -17,6 +16,7 @@ using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Connector;
+using Models.BotAuth;
 using static PolicyEnquiryBot.Helper.Helper;
 
 namespace PolicyEnquiryBot

@@ -13,7 +13,7 @@ using Microsoft.Bot.Connector;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
 using Newtonsoft.Json;
-using PolicyEnquiryBot.Models;
+using Models;
 
 namespace PolicyEnquiryBot.Helper
 {

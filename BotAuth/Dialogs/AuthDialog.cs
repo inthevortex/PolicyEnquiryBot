@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using BotAuth.Models;
 using BotAuth.Providers;
 using Microsoft.Bot.Builder.ConnectorEx;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
+using Models.BotAuth;
 using static BotAuth.ContextConstants;
 
 namespace BotAuth.Dialogs
@@ -118,21 +118,15 @@ namespace BotAuth.Dialogs
 
                 else
                 {
-                    if (msg.Text != null && CancellationWords.GetCancellationWords().Contains(msg.Text.ToUpper()))
-                        context.Done<AuthResult>(null);
+                    // Save authenticationOptions in UserData
+                    context.UserData.SetValue($"{_authProvider.Name}{AuthOptions}", _authOptions);
 
-                    else
-                    {
-                        // Save authenticationOptions in UserData
-                        context.UserData.SetValue($"{_authProvider.Name}{AuthOptions}", _authOptions);
-
-                        // Get ConversationReference and combine with AuthProvider type for the callback
-                        var conversationRef = context.Activity.ToConversationReference();
-                        var state = GetStateParam(conversationRef);
-                        var authenticationUrl = await _authProvider.GetAuthUrlAsync(_authOptions, state);
-                        await PromptToLogin(context, msg, authenticationUrl);
-                        context.Wait(MessageReceivedAsync);
-                    }
+                    // Get ConversationReference and combine with AuthProvider type for the callback
+                    var conversationRef = context.Activity.ToConversationReference();
+                    var state = GetStateParam(conversationRef);
+                    var authenticationUrl = await _authProvider.GetAuthUrlAsync(_authOptions, state);
+                    await PromptToLogin(context, msg, authenticationUrl);
+                    context.Wait(MessageReceivedAsync);
                 }
             }
         }

@@ -1,9 +1,9 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
-using BotAuth.Models;
 using BotAuth.Providers;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Identity.Client;
+using Models.BotAuth;
 using Newtonsoft.Json.Linq;
 
 namespace BotAuth

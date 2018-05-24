@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BotAuth.Models
+namespace Models.BotAuth
 {
     [Serializable]
     public class AuthenticationOptions

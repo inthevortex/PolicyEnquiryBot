@@ -2,9 +2,9 @@
 using System.Diagnostics;
 using System.Net;
 using System.Threading.Tasks;
-using BotAuth.Models;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Identity.Client;
+using Models.BotAuth;
 
 namespace BotAuth.Providers
 {

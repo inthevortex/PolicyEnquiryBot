@@ -9,8 +9,7 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using static PolicyEnquiryBot.Helper.Helper;
 using static BotAuth.ContextConstants;
-using BotAuth.Models;
-using static BotAuth.Models.CancellationWords;
+using Models.BotAuth;
 
 namespace PolicyEnquiryBot.Dialogs
 {
@@ -28,16 +27,24 @@ namespace PolicyEnquiryBot.Dialogs
         {
             var message = await result as Activity;
             var authProvider = new MSALAuthProvider();
-            context.UserData.TryGetValue($"{authProvider.Name}{MagicNumberValidated}", out string validated);
 
-            if (validated == "true" && message != null)
+            if (context.UserData.TryGetValue($"{authProvider.Name}{MagicNumberValidated}", out string validated))
             {
-                message.Text = await CallBingSpellCheckAsync(message.Text);
-                var reply = message.CreateReply("You are logged in.");
+                if (validated == "true" && message != null)
+                {
+                    // Check for spelling
+                    message.Text = await CallBingSpellCheckAsync(message.Text);
 
-                await context.PostAsync(reply);
-                context.Wait(MessageReceivedAsync);
+                    await context.Forward(new PolicyEnquiryDialog(),
+                        async (luisContext, obj) =>
+                        {
+                            var res = await obj;
+                            // Do Something
+                        },
+                        message, CancellationToken.None);
+                } 
             }
+
             else
             {
                 await context.Forward(
@@ -55,7 +62,8 @@ namespace PolicyEnquiryBot.Dialogs
                     }, message, CancellationToken.None);
             }
 
-            if (GetCancellationWords().Contains(message?.Text.ToUpperInvariant()))
+            // TODO: Implement logout in luis dialog
+            if (message?.Text.ToUpperInvariant() == "BYE")
             {
                 context.UserData.RemoveValue($"{authProvider.Name}{AuthResultKey}");
                 context.UserData.SetValue($"{authProvider.Name}{MagicNumberValidated}", "false");

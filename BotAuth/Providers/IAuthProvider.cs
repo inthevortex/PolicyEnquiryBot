@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
-using BotAuth.Models;
 using Microsoft.Bot.Builder.Dialogs;
+using Models.BotAuth;
 
 namespace BotAuth.Providers
 {
